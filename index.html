@@ -14,55 +14,93 @@
 html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif}
 .screen{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;transition:opacity .25s,transform .25s}
 .screen.hidden{opacity:0;pointer-events:none;transform:translateY(20px)}
-.mono{font-family:'DM Mono',monospace}
-/* HOME */
-.home-header{padding:52px 24px 16px}
-.home-date{font-size:12px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;font-family:'DM Mono',monospace}
-.home-title{font-size:28px;font-weight:700;line-height:1.2}
+/* TABS */
+.tab-bar{display:flex;background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0;padding-top:52px}
+.tab{flex:1;padding:12px 0;text-align:center;font-size:13px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-content{flex:1;overflow-y:auto;overflow-x:hidden}
+/* HOME TAB */
+.home-header{padding:20px 20px 12px}
+.home-date{font-size:12px;color:var(--muted);letter-spacing:.1em;font-family:'DM Mono',monospace;margin-bottom:4px}
+.home-title{font-size:24px;font-weight:700;line-height:1.2}
 .home-title span{color:var(--accent)}
-.week-strip{padding:12px 16px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;flex-shrink:0}
+.week-strip{padding:8px 16px 12px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
 .week-strip::-webkit-scrollbar{display:none}
-.wday{flex-shrink:0;width:46px;height:62px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.wday{flex-shrink:0;width:44px;height:58px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer}
 .wday.today{border-color:var(--accent);background:rgba(200,255,0,.1)}
-.wday.selected{border-color:rgba(200,255,0,.5);background:rgba(200,255,0,.06)}
-.wday.today{border-color:var(--accent);background:rgba(200,255,0,.1)}
-.wday.selected{border-color:rgba(200,255,0,.5);background:rgba(200,255,0,.06)}
-.wday.rest{opacity:.4}
+.wday.selected{border-color:rgba(200,255,0,.4);background:rgba(200,255,0,.05)}
+.wday.rest-day{opacity:.4}
 .wday-lbl{font-size:10px;color:var(--muted)}
 .wday.today .wday-lbl{color:var(--accent)}
-.wday-icon{font-size:18px}
-.wday-dot{width:5px;height:5px;border-radius:50%;background:var(--accent)}
-.today-card{margin:0 16px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;flex:1;overflow-y:auto}
-.tcard-bar{padding:16px 20px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
-.tcard-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.tcard-name{font-size:16px;font-weight:700;flex:1}
-.tcard-meta{font-size:12px;color:var(--muted)}
-.tcard-list{padding:14px 20px;display:flex;flex-direction:column;gap:8px}
+.wday-icon{font-size:16px}
+.wday-dot{width:4px;height:4px;border-radius:50%;background:var(--accent)}
+.today-card{margin:0 16px 16px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden}
+.tcard-bar{padding:14px 18px 10px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.tcard-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.tcard-name{font-size:15px;font-weight:700;flex:1}
+.tcard-meta{font-size:11px;color:var(--muted)}
+.tcard-list{padding:12px 18px;display:flex;flex-direction:column;gap:7px}
 .prev-item{display:flex;align-items:center;gap:10px;font-size:13px}
 .prev-num{font-size:11px;color:var(--muted);width:16px}
 .prev-name{flex:1}
 .prev-sets{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace}
-.start-btn{display:block;margin:14px 20px 20px;background:var(--accent);color:#0e0e0f;border:none;border-radius:var(--radius-sm);padding:14px;font-size:15px;font-weight:700;font-family:'Noto Sans SC',sans-serif;width:calc(100% - 40px);cursor:pointer;transition:transform .1s,opacity .1s;letter-spacing:.03em;text-align:center}
-.start-btn:active{transform:scale(.97);opacity:.85}
-/* WORKOUT */
+.start-btn{display:block;margin:12px 18px 18px;background:var(--accent);color:#0e0e0f;border:none;border-radius:var(--radius-sm);padding:13px;font-size:15px;font-weight:700;font-family:'Noto Sans SC',sans-serif;width:calc(100% - 36px);cursor:pointer;letter-spacing:.03em;text-align:center}
+.start-btn:active{opacity:.8}
+/* RUN TAB */
+.run-section{padding:16px 16px 0}
+.section-title{font-size:12px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;font-family:'DM Mono',monospace}
+.add-run-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:16px;margin-bottom:16px}
+.form-row{display:flex;gap:10px;margin-bottom:10px}
+.form-group{flex:1;display:flex;flex-direction:column;gap:5px}
+.form-group.full{flex:none;width:100%}
+.form-label{font-size:11px;color:var(--muted);letter-spacing:.05em}
+.form-input{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:14px;color:var(--text);font-family:'Noto Sans SC',sans-serif;width:100%;outline:none}
+.form-input:focus{border-color:rgba(200,255,0,.4)}
+.pace-display{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:14px;color:var(--accent);font-family:'DM Mono',monospace;min-height:40px;display:flex;align-items:center}
+.save-run-btn{width:100%;background:var(--accent);color:#0e0e0f;border:none;border-radius:var(--radius-sm);padding:13px;font-size:15px;font-weight:700;font-family:'Noto Sans SC',sans-serif;cursor:pointer;margin-top:4px}
+.save-run-btn:active{opacity:.8}
+.run-list{display:flex;flex-direction:column;gap:8px;padding:0 16px 16px}
+.run-item{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:14px 16px}
+.run-item-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.run-item-date{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace}
+.run-item-dist{font-size:18px;font-weight:700;color:var(--accent);font-family:'DM Mono',monospace}
+.run-item-dist span{font-size:12px;font-weight:400;color:var(--muted)}
+.run-stats{display:flex;gap:16px}
+.run-stat{display:flex;flex-direction:column;gap:2px}
+.run-stat-val{font-size:13px;font-weight:500;font-family:'DM Mono',monospace}
+.run-stat-lbl{font-size:10px;color:var(--muted)}
+.run-note{font-size:12px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.del-btn{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:0 0 0 8px}
+/* STATS TAB */
+.stats-section{padding:16px}
+.stat-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px}
+.stat-card-val{font-size:20px;font-weight:700;font-family:'DM Mono',monospace;color:var(--accent)}
+.stat-card-lbl{font-size:11px;color:var(--muted);margin-top:3px}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.chart-title{font-size:12px;color:var(--muted);margin-bottom:12px;font-family:'DM Mono',monospace;letter-spacing:.06em;text-transform:uppercase}
+.chart-wrap{position:relative;height:120px}
+canvas{width:100%;height:100%}
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted);font-size:14px;line-height:2}
+/* WORKOUT SCREEN */
 .wo-header{padding:52px 20px 14px;display:flex;align-items:center;gap:12px;flex-shrink:0}
 .back-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
 .back-btn svg{width:18px;height:18px;stroke:var(--text);fill:none;stroke-width:2}
-.wo-title{font-size:16px;font-weight:700;flex:1}
+.wo-title{font-size:15px;font-weight:700;flex:1}
 .round-badge{font-size:12px;font-family:'DM Mono',monospace;color:var(--muted);background:var(--surface2);padding:4px 10px;border-radius:20px}
 .prog-row{padding:0 20px 14px;flex-shrink:0}
 .prog-track{height:3px;background:var(--surface2);border-radius:2px;overflow:hidden}
 .prog-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s cubic-bezier(.4,0,.2,1)}
 .prog-lbls{display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
 .ex-area{flex:1;padding:0 16px;overflow:hidden;display:flex;flex-direction:column}
-.ex-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:18px 20px;flex:1;display:flex;flex-direction:column;gap:14px;overflow:hidden}
+.ex-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:18px;flex:1;display:flex;flex-direction:column;gap:12px;overflow:hidden}
 .ex-name{font-size:22px;font-weight:700;line-height:1.2}
 .chips{display:flex;gap:8px;flex-wrap:wrap}
 .chip{padding:5px 12px;border-radius:20px;font-size:12px;font-family:'DM Mono',monospace;border:1px solid var(--border);background:var(--surface2);color:var(--muted)}
 .chip.active{border-color:var(--accent);background:rgba(200,255,0,.12);color:var(--accent)}
 .chip.done{color:var(--border)}
-.ex-tip{font-size:13px;color:var(--muted);line-height:1.6;padding:12px;background:var(--surface2);border-radius:var(--radius-sm);border-left:3px solid var(--border)}
-.timer-blk{display:flex;flex-direction:column;align-items:center;gap:6px;padding:6px 0}
+.ex-tip{font-size:13px;color:var(--muted);line-height:1.6;padding:11px;background:var(--surface2);border-radius:var(--radius-sm);border-left:3px solid var(--border)}
+.timer-blk{display:flex;flex-direction:column;align-items:center;gap:6px;padding:4px 0}
 .ring-wrap{position:relative;width:96px;height:96px}
 .ring-wrap svg{transform:rotate(-90deg)}
 .ring-bg{fill:none;stroke:var(--surface2);stroke-width:4}
@@ -72,12 +110,11 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 .next-hint{font-size:12px;color:var(--muted);text-align:center}
 .next-hint span{color:var(--text)}
 .action-area{padding:12px 16px 36px;flex-shrink:0;display:flex;flex-direction:column;gap:10px}
-.main-btn{background:var(--accent);color:#0e0e0f;border:none;border-radius:var(--radius-sm);padding:16px;font-size:16px;font-weight:700;font-family:'Noto Sans SC',sans-serif;cursor:pointer;transition:transform .1s,opacity .1s;letter-spacing:.03em}
-.main-btn:active{transform:scale(.97);opacity:.85}
+.main-btn{background:var(--accent);color:#0e0e0f;border:none;border-radius:var(--radius-sm);padding:16px;font-size:16px;font-weight:700;font-family:'Noto Sans SC',sans-serif;cursor:pointer;letter-spacing:.03em}
+.main-btn:active{opacity:.8}
 .main-btn.dim{background:var(--surface2);color:var(--muted)}
 .skip-btn{background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;font-size:14px;font-family:'Noto Sans SC',sans-serif;cursor:pointer}
 .skip-btn:active{background:var(--surface2)}
-/* REST */
 .rest-ov{position:absolute;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:10;transition:opacity .3s}
 .rest-ov.hidden{opacity:0;pointer-events:none}
 .rest-ttl{font-size:13px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
@@ -91,22 +128,107 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 .done-title{font-size:26px;font-weight:700}
 .done-title span{color:var(--accent)}
 .done-stats{display:flex;gap:12px;margin-top:8px;width:100%}
-.done-stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 20px;flex:1}
-.done-val{font-size:22px;font-weight:700;font-family:'DM Mono',monospace;color:var(--accent)}
+.done-stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;flex:1}
+.done-val{font-size:20px;font-weight:700;font-family:'DM Mono',monospace;color:var(--accent)}
 .done-lbl{font-size:11px;color:var(--muted);margin-top:2px}
-.done-home{background:var(--accent);color:#0e0e0f;border:none;border-radius:var(--radius-sm);padding:16px 40px;font-size:16px;font-weight:700;font-family:'Noto Sans SC',sans-serif;cursor:pointer;margin-top:12px}
+.done-home{background:var(--accent);color:#0e0e0f;border:none;border-radius:var(--radius-sm);padding:14px 36px;font-size:15px;font-weight:700;font-family:'Noto Sans SC',sans-serif;cursor:pointer;margin-top:8px}
 </style>
 </head>
 <body>
-<div class="screen" id="home">
-  <div class="home-header">
-    <div class="home-date" id="hdate"></div>
-    <div class="home-title">今日<br><span id="hday"></span></div>
+
+<!-- MAIN (tabbed) -->
+<div class="screen" id="main">
+  <div class="tab-bar">
+    <div class="tab active" id="tab-home" onclick="switchTab('home')">训练</div>
+    <div class="tab" id="tab-run" onclick="switchTab('run')">跑步</div>
+    <div class="tab" id="tab-stats" onclick="switchTab('stats')">趋势</div>
   </div>
-  <div class="week-strip" id="wstrip"></div>
-  <div class="today-card" id="tcard"></div>
+
+  <!-- HOME TAB -->
+  <div class="tab-content" id="tc-home">
+    <div class="home-header">
+      <div class="home-date" id="hdate"></div>
+      <div class="home-title">今日<br><span id="hday"></span></div>
+    </div>
+    <div class="week-strip" id="wstrip"></div>
+    <div class="today-card" id="tcard"></div>
+  </div>
+
+  <!-- RUN TAB -->
+  <div class="tab-content" id="tc-run" style="display:none">
+    <div class="run-section">
+      <div class="section-title">添加跑步记录</div>
+      <div class="add-run-card">
+        <div class="form-row">
+          <div class="form-group">
+            <div class="form-label">日期</div>
+            <input class="form-input" type="date" id="r-date">
+          </div>
+          <div class="form-group">
+            <div class="form-label">距离 (km)</div>
+            <input class="form-input" type="number" id="r-dist" placeholder="5.0" step="0.1" oninput="calcPace()">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <div class="form-label">时长 (分钟)</div>
+            <input class="form-input" type="number" id="r-mins" placeholder="45" oninput="calcPace()">
+          </div>
+          <div class="form-group">
+            <div class="form-label">均速 (自动)</div>
+            <div class="pace-display" id="r-pace">—</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <div class="form-label">平均心率 (bpm)</div>
+            <input class="form-input" type="number" id="r-hr" placeholder="145">
+          </div>
+          <div class="form-group">
+            <div class="form-label">类型</div>
+            <select class="form-input" id="r-type">
+              <option value="Z2常规">Z2 常规</option>
+              <option value="Z2长跑">Z2 长跑</option>
+              <option value="恢复跑">恢复跑</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group full">
+            <div class="form-label">备注</div>
+            <input class="form-input" type="text" id="r-note" placeholder="天气、感受...">
+          </div>
+        </div>
+        <button class="save-run-btn" onclick="saveRun()">保存记录</button>
+      </div>
+    </div>
+    <div class="run-section" style="padding-bottom:0">
+      <div class="section-title">历史记录</div>
+    </div>
+    <div class="run-list" id="run-list"></div>
+  </div>
+
+  <!-- STATS TAB -->
+  <div class="tab-content" id="tc-stats" style="display:none">
+    <div class="stats-section">
+      <div class="stat-cards" id="stat-cards"></div>
+      <div class="chart-card">
+        <div class="chart-title">距离趋势 (km)</div>
+        <div class="chart-wrap"><canvas id="chart-dist"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">配速趋势 (min/km)</div>
+        <div class="chart-wrap"><canvas id="chart-pace"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">平均心率趋势</div>
+        <div class="chart-wrap"><canvas id="chart-hr"></canvas></div>
+      </div>
+    </div>
+  </div>
 </div>
 
+<!-- WORKOUT SCREEN -->
 <div class="screen hidden" id="workout">
   <div class="wo-header">
     <div class="back-btn" id="backBtn"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg></div>
@@ -147,6 +269,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
   </div>
 </div>
 
+<!-- DONE -->
 <div class="screen hidden" id="done">
   <div class="done-icon">🎯</div>
   <div class="done-title">完成训练<span>！</span></div>
@@ -185,46 +308,54 @@ const WEEK=[
 ];
 
 const $=id=>document.getElementById(id);
-let S={};
-let exTimer=null,restTimer=null;
+let S={},exTimer=null,restTimer=null;
+let activeTab='home';
 
-function showScreen(n){
-  ['home','workout','done'].forEach(k=>$(k).classList.toggle('hidden',k!==n));
+// ===== TABS =====
+function switchTab(t){
+  activeTab=t;
+  ['home','run','stats'].forEach(k=>{
+    $('tab-'+k).classList.toggle('active',k===t);
+    $('tc-'+k).style.display=k===t?'block':'none';
+  });
+  if(t==='run')renderRunList();
+  if(t==='stats')renderStats();
 }
 
+function showScreen(n){
+  ['main','workout','done'].forEach(k=>$(k).classList.toggle('hidden',k!==n));
+}
+
+// ===== HOME =====
 function initHome(){
   const now=new Date();
   const mns=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const dns=['日','一','二','三','四','五','六'];
   $('hdate').textContent=`${mns[now.getMonth()]} ${now.getDate()} · 周${dns[now.getDay()]}`;
-  const wd=now.getDay();
-  const wi=wd===0?6:wd-1;
-  const tod=WEEK[wi];
-  // title
+  const wd=now.getDay(),wi=wd===0?6:wd-1,tod=WEEK[wi];
   function titleFor(d){
     if(d.type==='rest')return'休息日';
     if(d.type==='run')return'跑步日';
     return d.key?PLAN[d.key].name:'训练';
   }
   $('hday').textContent=titleFor(tod);
-  // week strip
   const strip=$('wstrip');strip.innerHTML='';
   function selectDay(i){
-    strip.querySelectorAll('.wday').forEach((el,j)=>{
-      el.classList.toggle('selected',j===i&&j!==wi);
-    });
+    strip.querySelectorAll('.wday').forEach((el,j)=>el.classList.toggle('selected',j===i&&j!==wi));
     const d=WEEK[i];
     $('hday').textContent=(i===wi?'':('周'+d.lbl+' · '))+titleFor(d);
     renderCard(d);
   }
   WEEK.forEach((d,i)=>{
     const div=document.createElement('div');
-    div.className='wday'+(i===wi?' today':'')+(d.type==='rest'?' rest':'');
+    div.className='wday'+(i===wi?' today':'')+(d.type==='rest'?' rest-day':'');
     div.innerHTML=`<div class="wday-lbl">周${d.lbl}</div><div class="wday-icon">${d.icon}</div>${i===wi?'<div class="wday-dot"></div>':''}`;
     div.onclick=()=>selectDay(i);
     strip.appendChild(div);
   });
   renderCard(tod);
+  // set default date for run form
+  $('r-date').value=now.toISOString().slice(0,10);
 }
 
 function renderCard(d){
@@ -236,65 +367,195 @@ function renderCard(d){
   tc.innerHTML=`<div class="tcard-bar"><div class="tcard-dot" style="background:${p.color}"></div><div class="tcard-name">${p.name}</div><div class="tcard-meta">${p.meta}</div></div><div class="tcard-list">${items}</div><button class="start-btn" onclick="startWorkout('${d.key}')">开始训练 →</button>`;
 }
 
+// ===== RUN RECORDS =====
+function getRuns(){
+  try{return JSON.parse(localStorage.getItem('runs')||'[]');}catch(e){return[];}
+}
+function saveRuns(arr){localStorage.setItem('runs',JSON.stringify(arr));}
+
+function calcPace(){
+  const dist=parseFloat($('r-dist').value);
+  const mins=parseFloat($('r-mins').value);
+  if(dist>0&&mins>0){
+    const paceMin=Math.floor(mins/dist);
+    const paceSec=Math.round((mins/dist-paceMin)*60);
+    $('r-pace').textContent=`${paceMin}'${String(paceSec).padStart(2,'0')}" /km`;
+  } else {
+    $('r-pace').textContent='—';
+  }
+}
+
+function saveRun(){
+  const dist=parseFloat($('r-dist').value);
+  const mins=parseFloat($('r-mins').value);
+  const hr=parseInt($('r-hr').value)||0;
+  const date=$('r-date').value;
+  const note=$('r-note').value.trim();
+  const type=$('r-type').value;
+  if(!dist||!mins||!date){alert('请填写日期、距离和时长');return;}
+  const paceMin=Math.floor(mins/dist);
+  const paceSec=Math.round((mins/dist-paceMin)*60);
+  const paceStr=`${paceMin}'${String(paceSec).padStart(2,'0')}"`;
+  const runs=getRuns();
+  runs.unshift({id:Date.now(),date,dist,mins,pace:paceStr,paceVal:mins/dist,hr,type,note});
+  saveRuns(runs);
+  $('r-dist').value='';$('r-mins').value='';$('r-hr').value='';$('r-note').value='';
+  $('r-pace').textContent='—';
+  renderRunList();
+}
+
+function deleteRun(id){
+  saveRuns(getRuns().filter(r=>r.id!==id));
+  renderRunList();
+  if(activeTab==='stats')renderStats();
+}
+
+function renderRunList(){
+  const runs=getRuns();
+  const list=$('run-list');
+  if(!runs.length){list.innerHTML='<div class="empty-state">还没有跑步记录<br>跑完后来记一笔 🏃</div>';return;}
+  list.innerHTML=runs.map(r=>`
+    <div class="run-item">
+      <div class="run-item-top">
+        <div>
+          <div class="run-item-date">${r.date} · ${r.type}</div>
+          <div class="run-item-dist">${r.dist.toFixed(1)}<span> km</span></div>
+        </div>
+        <button class="del-btn" onclick="deleteRun(${r.id})">×</button>
+      </div>
+      <div class="run-stats">
+        <div class="run-stat"><div class="run-stat-val">${r.mins}'</div><div class="run-stat-lbl">时长</div></div>
+        <div class="run-stat"><div class="run-stat-val">${r.pace}</div><div class="run-stat-lbl">配速</div></div>
+        ${r.hr?`<div class="run-stat"><div class="run-stat-val">${r.hr}</div><div class="run-stat-lbl">心率</div></div>`:''}
+      </div>
+      ${r.note?`<div class="run-note">${r.note}</div>`:''}
+    </div>`).join('');
+}
+
+// ===== STATS =====
+function renderStats(){
+  const runs=getRuns();
+  const cards=$('stat-cards');
+  if(!runs.length){
+    cards.innerHTML='<div class="empty-state" style="grid-column:1/-1">记录跑步后这里会显示趋势 📊</div>';
+    clearChart('chart-dist');clearChart('chart-pace');clearChart('chart-hr');
+    return;
+  }
+  const totalDist=runs.reduce((a,r)=>a+r.dist,0);
+  const totalRuns=runs.length;
+  const avgPace=runs.reduce((a,r)=>a+r.paceVal,0)/totalRuns;
+  const avgPaceMin=Math.floor(avgPace);
+  const avgPaceSec=Math.round((avgPace-avgPaceMin)*60);
+  const avgHr=runs.filter(r=>r.hr).reduce((a,r,i,arr)=>a+r.hr/arr.length,0);
+  cards.innerHTML=`
+    <div class="stat-card"><div class="stat-card-val">${totalDist.toFixed(1)}</div><div class="stat-card-lbl">总公里数</div></div>
+    <div class="stat-card"><div class="stat-card-val">${totalRuns}</div><div class="stat-card-lbl">总次数</div></div>
+    <div class="stat-card"><div class="stat-card-val">${avgPaceMin}'${String(avgPaceSec).padStart(2,'0')}"</div><div class="stat-card-lbl">平均配速</div></div>
+    <div class="stat-card"><div class="stat-card-val">${avgHr?Math.round(avgHr):'—'}</div><div class="stat-card-lbl">平均心率</div></div>`;
+  const sorted=[...runs].sort((a,b)=>a.date.localeCompare(b.date)).slice(-12);
+  drawChart('chart-dist',sorted.map(r=>r.date.slice(5)),sorted.map(r=>r.dist),'#c8ff00');
+  drawChart('chart-pace',sorted.map(r=>r.date.slice(5)),sorted.map(r=>parseFloat(r.paceVal.toFixed(2))),'#4fc3f7',true);
+  const hrData=sorted.filter(r=>r.hr);
+  if(hrData.length)drawChart('chart-hr',hrData.map(r=>r.date.slice(5)),hrData.map(r=>r.hr),'#ff9f43');
+  else clearChart('chart-hr');
+}
+
+function clearChart(id){
+  const c=$(id);const ctx=c.getContext('2d');
+  ctx.clearRect(0,0,c.width,c.height);
+}
+
+function drawChart(id,labels,data,color,invertY=false){
+  const canvas=$(id);
+  const dpr=window.devicePixelRatio||1;
+  const w=canvas.parentElement.offsetWidth-32;
+  const h=120;
+  canvas.width=w*dpr;canvas.height=h*dpr;
+  canvas.style.width=w+'px';canvas.style.height=h+'px';
+  const ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  if(!data.length)return;
+  const pad={t:10,r:10,b:24,l:10};
+  const cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
+  const mn=Math.min(...data),mx=Math.max(...data);
+  const range=mx-mn||1;
+  function px(i){return pad.l+i*(cw/(data.length-1||1));}
+  function py(v){
+    const norm=(v-mn)/range;
+    return pad.t+(invertY?norm:1-norm)*ch;
+  }
+  // grid line
+  ctx.strokeStyle='rgba(255,255,255,0.06)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(pad.l,pad.t+ch/2);ctx.lineTo(pad.l+cw,pad.t+ch/2);ctx.stroke();
+  // area fill
+  ctx.beginPath();
+  ctx.moveTo(px(0),py(data[0]));
+  data.forEach((v,i)=>{if(i>0)ctx.lineTo(px(i),py(v));});
+  ctx.lineTo(px(data.length-1),pad.t+ch);
+  ctx.lineTo(px(0),pad.t+ch);
+  ctx.closePath();
+  const grad=ctx.createLinearGradient(0,pad.t,0,pad.t+ch);
+  grad.addColorStop(0,color+'55');grad.addColorStop(1,color+'00');
+  ctx.fillStyle=grad;ctx.fill();
+  // line
+  ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=2;ctx.lineJoin='round';
+  data.forEach((v,i)=>{i===0?ctx.moveTo(px(i),py(v)):ctx.lineTo(px(i),py(v));});
+  ctx.stroke();
+  // dots
+  data.forEach((v,i)=>{
+    ctx.beginPath();ctx.arc(px(i),py(v),3,0,Math.PI*2);
+    ctx.fillStyle=color;ctx.fill();
+  });
+  // labels
+  ctx.fillStyle='rgba(136,136,136,0.8)';ctx.font=`10px 'DM Mono',monospace`;ctx.textAlign='center';
+  const step=Math.max(1,Math.floor(labels.length/4));
+  labels.forEach((l,i)=>{if(i%step===0||i===labels.length-1)ctx.fillText(l,px(i),h-6);});
+}
+
+// ===== WORKOUT ENGINE =====
 function startWorkout(key){
   const p=PLAN[key];
-  S={key,round:0,exIdx:0,setDone:new Array(p.ex.length).fill(0),startTime:Date.now(),completedSets:0,totalSets:p.ex.reduce((a,e)=>a+e.sets,0)};
+  S={key,round:0,exIdx:0,setDone:new Array(p.ex.length).fill(0),startTime:Date.now(),completedSets:0};
   $('woTitle').textContent=p.name;
   showScreen('workout');
   renderEx();
 }
 
 function renderEx(){
-  const p=PLAN[S.key];const ex=p.ex[S.exIdx];const rounds=p.ex[0].sets;
+  const p=PLAN[S.key],ex=p.ex[S.exIdx],rounds=p.ex[0].sets;
   $('roundBadge').textContent=`第 ${S.round+1} / ${rounds} 轮`;
-  $('exName').textContent=ex.name;
-  $('exTip').textContent=ex.tip;
-  // chips
+  $('exName').textContent=ex.name;$('exTip').textContent=ex.tip;
   const ch=$('chips');ch.innerHTML='';
   for(let r=0;r<ex.sets;r++){
     const c=document.createElement('div');
     c.className='chip'+(r<S.setDone[S.exIdx]?' done':r===S.round?' active':'');
     c.textContent=`第${r+1}组`;ch.appendChild(c);
   }
-  // progress
-  const total=p.ex.length*rounds;
-  const done=S.round*p.ex.length+S.exIdx;
+  const total=p.ex.length*rounds,done=S.round*p.ex.length+S.exIdx;
   $('progFill').style.width=(done/total*100)+'%';
   $('progL').textContent=done+'/'+total;
   const nex=p.ex[S.exIdx+1];
   $('progR').textContent=nex?'下一：'+nex.name:(S.round+1<rounds?'下一轮':'最后一个');
-  // next hint
   if(nex)$('nextHint').innerHTML=`下一个：<span>${nex.name}</span>`;
   else if(S.round+1<rounds)$('nextHint').innerHTML=`下一轮：<span>${p.ex[0].name}</span>`;
   else $('nextHint').innerHTML=`<span style="color:var(--accent)">最后一个！</span>`;
-  // timer or reps
   if(ex.dur){
-    $('timerBlk').style.display='flex';
-    startExTimer(ex.dur);
-    $('mainBtn').textContent='提前完成';
-    $('mainBtn').className='main-btn dim';
+    $('timerBlk').style.display='flex';startExTimer(ex.dur);
+    $('mainBtn').textContent='提前完成';$('mainBtn').className='main-btn dim';
   } else {
-    $('timerBlk').style.display='none';
-    stopExTimer();
-    $('mainBtn').textContent='完成 '+ex.reps;
-    $('mainBtn').className='main-btn';
+    $('timerBlk').style.display='none';stopExTimer();
+    $('mainBtn').textContent='完成 '+ex.reps;$('mainBtn').className='main-btn';
   }
-  $('mainBtn').onclick=completeEx;
-  $('skipBtn').onclick=completeEx;
+  $('mainBtn').onclick=completeEx;$('skipBtn').onclick=completeEx;
 }
 
 function startExTimer(secs){
   stopExTimer();
-  const ring=$('ringFg');
-  const circ=2*Math.PI*44;
-  ring.style.strokeDasharray=circ;
-  ring.style.stroke='#c8ff00';
-  let s=secs;
-  $('timerNum').textContent=s;
-  ring.style.strokeDashoffset=0;
+  const ring=$('ringFg'),circ=2*Math.PI*44;
+  ring.style.strokeDasharray=circ;ring.style.stroke='#c8ff00';
+  let s=secs;$('timerNum').textContent=s;ring.style.strokeDashoffset=0;
   exTimer=setInterval(()=>{
-    s--;
-    $('timerNum').textContent=s;
+    s--;$('timerNum').textContent=s;
     ring.style.strokeDashoffset=circ*(1-s/secs);
     if(s<=3)ring.style.stroke='#ff6b6b';
     if(s<=0){stopExTimer();completeEx();}
@@ -303,20 +564,11 @@ function startExTimer(secs){
 function stopExTimer(){if(exTimer){clearInterval(exTimer);exTimer=null;}}
 
 function completeEx(){
-  stopExTimer();
-  S.completedSets++;
-  S.setDone[S.exIdx]++;
-  const p=PLAN[S.key];const ex=p.ex[S.exIdx];const rounds=p.ex[0].sets;
-  const nextExIdx=S.exIdx+1;
-  const rest=ex.rest||60;
-  if(nextExIdx<p.ex.length){
-    S.exIdx=nextExIdx;
-    showRest(rest,p.ex[nextExIdx].name,renderEx);
-  } else {
-    const nr=S.round+1;
-    if(nr<rounds){S.round=nr;S.exIdx=0;showRest(rest,`第${nr+1}轮：${p.ex[0].name}`,renderEx);}
-    else showDone();
-  }
+  stopExTimer();S.completedSets++;S.setDone[S.exIdx]++;
+  const p=PLAN[S.key],ex=p.ex[S.exIdx],rounds=p.ex[0].sets,rest=ex.rest||60;
+  const next=S.exIdx+1;
+  if(next<p.ex.length){S.exIdx=next;showRest(rest,p.ex[next].name,renderEx);}
+  else{const nr=S.round+1;if(nr<rounds){S.round=nr;S.exIdx=0;showRest(rest,`第${nr+1}轮：${p.ex[0].name}`,renderEx);}else showDone();}
 }
 
 function showRest(secs,nextName,cb){
@@ -339,8 +591,8 @@ function showDone(){
   showScreen('done');
 }
 
-$('backBtn').onclick=()=>{stopExTimer();if(restTimer)clearInterval(restTimer);$('restOv').classList.add('hidden');showScreen('home');};
-$('doneHome').onclick=()=>showScreen('home');
+$('backBtn').onclick=()=>{stopExTimer();if(restTimer)clearInterval(restTimer);$('restOv').classList.add('hidden');showScreen('main');};
+$('doneHome').onclick=()=>showScreen('main');
 initHome();
 </script>
 </body>

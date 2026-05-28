@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="训练">
+<title>训练计划</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e0e0f;--surface:#1a1a1c;--surface2:#242426;--border:#2e2e31;--text:#f0f0f0;--muted:#888;--accent:#c8ff00;--blue:#4fc3f7;--red:#ff6b6b;--radius:16px;--radius-sm:10px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;transition:opacity .25s,transform .25s}
+.screen.hidden{opacity:0;pointer-events:none;transform:translateY(20px)}
+.mono{font-family:'DM Mono',monospace}
+/* HOME */
+.home-header{padding:52px 24px 16px}
+.home-date{font-size:12px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;font-family:'DM Mono',monospace}
+.home-title{font-size:28px;font-weight:700;line-height:1.2}
+.home-title span{color:var(--accent)}
+.week-strip{padding:12px 16px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;flex-shrink:0}
+.week-strip::-webkit-scrollbar{display:none}
+.wday{flex-shrink:0;width:46px;height:62px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.wday.today{border-color:var(--accent);background:rgba(200,255,0,.1)}
+.wday.selected{border-color:rgba(200,255,0,.5);background:rgba(200,255,0,.06)}
+.wday.today{border-color:var(--accent);background:rgba(200,255,0,.1)}
+.wday.selected{border-color:rgba(200,255,0,.5);background:rgba(200,255,0,.06)}
+.wday.rest{opacity:.4}
+.wday-lbl{font-size:10px;color:var(--muted)}
+.wday.today .wday-lbl{color:var(--accent)}
+.wday-icon{font-size:18px}
+.wday-dot{width:5px;height:5px;border-radius:50%;background:var(--accent)}
+.today-card{margin:0 16px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;flex:1;overflow-y:auto}
+.tcard-bar{padding:16px 20px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.tcard-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.tcard-name{font-size:16px;font-weight:700;flex:1}
+.tcard-meta{font-size:12px;color:var(--muted)}
+.tcard-list{padding:14px 20px;display:flex;flex-direction:column;gap:8px}
+.prev-item{display:flex;align-items:center;gap:10px;font-size:13px}
+.prev-num{font-size:11px;color:var(--muted);width:16px}
+.prev-name{flex:1}
+.prev-sets{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace}
+.start-btn{display:block;margin:14px 20px 20px;background:var(--accent);color:#0e0e0f;border:none;border-radius:var(--radius-sm);padding:14px;font-size:15px;font-weight:700;font-family:'Noto Sans SC',sans-serif;width:calc(100% - 40px);cursor:pointer;transition:transform .1s,opacity .1s;letter-spacing:.03em;text-align:center}
+.start-btn:active{transform:scale(.97);opacity:.85}
+/* WORKOUT */
+.wo-header{padding:52px 20px 14px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.back-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.back-btn svg{width:18px;height:18px;stroke:var(--text);fill:none;stroke-width:2}
+.wo-title{font-size:16px;font-weight:700;flex:1}
+.round-badge{font-size:12px;font-family:'DM Mono',monospace;color:var(--muted);background:var(--surface2);padding:4px 10px;border-radius:20px}
+.prog-row{padding:0 20px 14px;flex-shrink:0}
+.prog-track{height:3px;background:var(--surface2);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s cubic-bezier(.4,0,.2,1)}
+.prog-lbls{display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
+.ex-area{flex:1;padding:0 16px;overflow:hidden;display:flex;flex-direction:column}
+.ex-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:18px 20px;flex:1;display:flex;flex-direction:column;gap:14px;overflow:hidden}
+.ex-name{font-size:22px;font-weight:700;line-height:1.2}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:5px 12px;border-radius:20px;font-size:12px;font-family:'DM Mono',monospace;border:1px solid var(--border);background:var(--surface2);color:var(--muted)}
+.chip.active{border-color:var(--accent);background:rgba(200,255,0,.12);color:var(--accent)}
+.chip.done{color:var(--border)}
+.ex-tip{font-size:13px;color:var(--muted);line-height:1.6;padding:12px;background:var(--surface2);border-radius:var(--radius-sm);border-left:3px solid var(--border)}
+.timer-blk{display:flex;flex-direction:column;align-items:center;gap:6px;padding:6px 0}
+.ring-wrap{position:relative;width:96px;height:96px}
+.ring-wrap svg{transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:var(--surface2);stroke-width:4}
+.ring-fg{fill:none;stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset 1s linear,stroke .3s}
+.timer-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;font-family:'DM Mono',monospace}
+.timer-lbl{font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.next-hint{font-size:12px;color:var(--muted);text-align:center}
+.next-hint span{color:var(--text)}
+.action-area{padding:12px 16px 36px;flex-shrink:0;display:flex;flex-direction:column;gap:10px}
+.main-btn{background:var(--accent);color:#0e0e0f;border:none;border-radius:var(--radius-sm);padding:16px;font-size:16px;font-weight:700;font-family:'Noto Sans SC',sans-serif;cursor:pointer;transition:transform .1s,opacity .1s;letter-spacing:.03em}
+.main-btn:active{transform:scale(.97);opacity:.85}
+.main-btn.dim{background:var(--surface2);color:var(--muted)}
+.skip-btn{background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;font-size:14px;font-family:'Noto Sans SC',sans-serif;cursor:pointer}
+.skip-btn:active{background:var(--surface2)}
+/* REST */
+.rest-ov{position:absolute;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:10;transition:opacity .3s}
+.rest-ov.hidden{opacity:0;pointer-events:none}
+.rest-ttl{font-size:13px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.rest-num{font-size:72px;font-weight:700;font-family:'DM Mono',monospace;color:var(--accent);line-height:1}
+.rest-next-lbl{font-size:14px;color:var(--muted);text-align:center}
+.rest-next-lbl strong{color:var(--text)}
+.rest-skip{margin-top:8px;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 32px;font-size:14px;font-family:'Noto Sans SC',sans-serif;cursor:pointer}
+/* DONE */
+#done{align-items:center;justify-content:center;gap:16px;text-align:center;padding:40px 24px}
+.done-icon{font-size:56px}
+.done-title{font-size:26px;font-weight:700}
+.done-title span{color:var(--accent)}
+.done-stats{display:flex;gap:12px;margin-top:8px;width:100%}
+.done-stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 20px;flex:1}
+.done-val{font-size:22px;font-weight:700;font-family:'DM Mono',monospace;color:var(--accent)}
+.done-lbl{font-size:11px;color:var(--muted);margin-top:2px}
+.done-home{background:var(--accent);color:#0e0e0f;border:none;border-radius:var(--radius-sm);padding:16px 40px;font-size:16px;font-weight:700;font-family:'Noto Sans SC',sans-serif;cursor:pointer;margin-top:12px}
+</style>
+</head>
+<body>
+<div class="screen" id="home">
+  <div class="home-header">
+    <div class="home-date" id="hdate"></div>
+    <div class="home-title">今日<br><span id="hday"></span></div>
+  </div>
+  <div class="week-strip" id="wstrip"></div>
+  <div class="today-card" id="tcard"></div>
+</div>
+
+<div class="screen hidden" id="workout">
+  <div class="wo-header">
+    <div class="back-btn" id="backBtn"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg></div>
+    <div class="wo-title" id="woTitle"></div>
+    <div class="round-badge" id="roundBadge"></div>
+  </div>
+  <div class="prog-row">
+    <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+    <div class="prog-lbls"><span id="progL"></span><span id="progR"></span></div>
+  </div>
+  <div class="ex-area">
+    <div class="ex-card">
+      <div class="ex-name" id="exName"></div>
+      <div class="chips" id="chips"></div>
+      <div class="timer-blk" id="timerBlk" style="display:none">
+        <div class="ring-wrap">
+          <svg viewBox="0 0 100 100" width="96" height="96">
+            <circle class="ring-bg" cx="50" cy="50" r="44"/>
+            <circle class="ring-fg" id="ringFg" cx="50" cy="50" r="44"/>
+          </svg>
+          <div class="timer-num" id="timerNum"></div>
+        </div>
+        <div class="timer-lbl">保持</div>
+      </div>
+      <div class="ex-tip" id="exTip"></div>
+      <div class="next-hint" id="nextHint"></div>
+    </div>
+  </div>
+  <div class="action-area">
+    <button class="main-btn" id="mainBtn"></button>
+    <button class="skip-btn" id="skipBtn">跳过</button>
+  </div>
+  <div class="rest-ov hidden" id="restOv">
+    <div class="rest-ttl">休息</div>
+    <div class="rest-num" id="restNum">60</div>
+    <div class="rest-next-lbl" id="restNextLbl"></div>
+    <button class="rest-skip" id="restSkip">跳过休息</button>
+  </div>
+</div>
+
+<div class="screen hidden" id="done">
+  <div class="done-icon">🎯</div>
+  <div class="done-title">完成训练<span>！</span></div>
+  <div class="done-stats">
+    <div class="done-stat"><div class="done-val" id="doneTime">0</div><div class="done-lbl">分钟</div></div>
+    <div class="done-stat"><div class="done-val" id="doneSets">0</div><div class="done-lbl">组完成</div></div>
+  </div>
+  <button class="done-home" id="doneHome">返回主页</button>
+</div>
+
+<script>
+const PLAN={
+  sa:{name:'力量 A — 臀腿',meta:'约 30 min',color:'#c8ff00',ex:[
+    {name:'臀桥',sets:3,reps:'15次',dur:null,rest:60,tip:'脚跟发力，夹臀，腰不过伸。顶峰停 1 秒'},
+    {name:'靠墙静蹲',sets:3,reps:null,dur:45,rest:60,tip:'膝不超脚尖，大腿平行地面，背贴墙不滑'},
+    {name:'单腿罗马尼亚硬拉',sets:3,reps:'10次/腿',dur:null,rest:60,tip:'支撑腿微屈，背中立，感受臀大肌拉伸。不稳先退双腿版'},
+    {name:'提踵',sets:3,reps:'20次',dur:null,rest:60,tip:'慢起慢落 2s/2s，站台阶边缘效果更好'},
+    {name:'单腿站立',sets:3,reps:null,dur:30,rest:60,tip:'盯固定点保持平衡。进阶：闭眼或站软垫'},
+  ]},
+  sb:{name:'力量 B — 核心',meta:'约 25 min',color:'#4fc3f7',ex:[
+    {name:'死虫式',sets:3,reps:'8次/侧',dur:null,rest:60,tip:'下背贴地，对侧手脚同时伸展，呼气启动，不憋气'},
+    {name:'鸟狗式',sets:3,reps:'10次/侧',dur:null,rest:60,tip:'髋不旋转，腰椎不塌陷，想象头顶放一杯水'},
+    {name:'平板支撑',sets:3,reps:null,dur:40,rest:45,tip:'肘在肩正下方，臀不撅不塌，全程腹部收紧'},
+    {name:'侧平板支撑',sets:3,reps:null,dur:25,rest:60,tip:'身体侧面成一直线，髋不下沉'},
+    {name:'单腿臀桥',sets:3,reps:'10次/腿',dur:null,rest:60,tip:'空中腿伸直，骨盆保持水平不歪'},
+  ]}
+};
+const WEEK=[
+  {lbl:'一',type:'rest',icon:'😴'},
+  {lbl:'二',type:'run',icon:'🏃'},
+  {lbl:'三',type:'strength',icon:'💪',key:'sa'},
+  {lbl:'四',type:'run',icon:'🏃'},
+  {lbl:'五',type:'strength',icon:'💪',key:'sb'},
+  {lbl:'六',type:'run',icon:'🏃'},
+  {lbl:'日',type:'rest',icon:'😴'},
+];
+
+const $=id=>document.getElementById(id);
+let S={};
+let exTimer=null,restTimer=null;
+
+function showScreen(n){
+  ['home','workout','done'].forEach(k=>$(k).classList.toggle('hidden',k!==n));
+}
+
+function initHome(){
+  const now=new Date();
+  const mns=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dns=['日','一','二','三','四','五','六'];
+  $('hdate').textContent=`${mns[now.getMonth()]} ${now.getDate()} · 周${dns[now.getDay()]}`;
+  const wd=now.getDay();
+  const wi=wd===0?6:wd-1;
+  const tod=WEEK[wi];
+  // title
+  function titleFor(d){
+    if(d.type==='rest')return'休息日';
+    if(d.type==='run')return'跑步日';
+    return d.key?PLAN[d.key].name:'训练';
+  }
+  $('hday').textContent=titleFor(tod);
+  // week strip
+  const strip=$('wstrip');strip.innerHTML='';
+  function selectDay(i){
+    strip.querySelectorAll('.wday').forEach((el,j)=>{
+      el.classList.toggle('selected',j===i&&j!==wi);
+    });
+    const d=WEEK[i];
+    $('hday').textContent=(i===wi?'':('周'+d.lbl+' · '))+titleFor(d);
+    renderCard(d);
+  }
+  WEEK.forEach((d,i)=>{
+    const div=document.createElement('div');
+    div.className='wday'+(i===wi?' today':'')+(d.type==='rest'?' rest':'');
+    div.innerHTML=`<div class="wday-lbl">周${d.lbl}</div><div class="wday-icon">${d.icon}</div>${i===wi?'<div class="wday-dot"></div>':''}`;
+    div.onclick=()=>selectDay(i);
+    strip.appendChild(div);
+  });
+  renderCard(tod);
+}
+
+function renderCard(d){
+  const tc=$('tcard');
+  if(d.type==='rest'){tc.innerHTML='<div style="padding:32px;text-align:center;color:var(--muted);font-size:14px">今天休息，好好恢复 💤</div>';return;}
+  if(d.type==='run'){tc.innerHTML='<div style="padding:28px 20px;text-align:center;color:var(--muted);font-size:14px;line-height:2">🏃 跑步日<br><span style="font-size:12px">使用 Apple Watch 记录<br>Z2 心率 138–149 bpm</span></div>';return;}
+  const p=PLAN[d.key];
+  const items=p.ex.map((e,i)=>`<div class="prev-item"><span class="prev-num">${i+1}</span><span class="prev-name">${e.name}</span><span class="prev-sets">${e.sets}×${e.dur?e.dur+'s':e.reps}</span></div>`).join('');
+  tc.innerHTML=`<div class="tcard-bar"><div class="tcard-dot" style="background:${p.color}"></div><div class="tcard-name">${p.name}</div><div class="tcard-meta">${p.meta}</div></div><div class="tcard-list">${items}</div><button class="start-btn" onclick="startWorkout('${d.key}')">开始训练 →</button>`;
+}
+
+function startWorkout(key){
+  const p=PLAN[key];
+  S={key,round:0,exIdx:0,setDone:new Array(p.ex.length).fill(0),startTime:Date.now(),completedSets:0,totalSets:p.ex.reduce((a,e)=>a+e.sets,0)};
+  $('woTitle').textContent=p.name;
+  showScreen('workout');
+  renderEx();
+}
+
+function renderEx(){
+  const p=PLAN[S.key];const ex=p.ex[S.exIdx];const rounds=p.ex[0].sets;
+  $('roundBadge').textContent=`第 ${S.round+1} / ${rounds} 轮`;
+  $('exName').textContent=ex.name;
+  $('exTip').textContent=ex.tip;
+  // chips
+  const ch=$('chips');ch.innerHTML='';
+  for(let r=0;r<ex.sets;r++){
+    const c=document.createElement('div');
+    c.className='chip'+(r<S.setDone[S.exIdx]?' done':r===S.round?' active':'');
+    c.textContent=`第${r+1}组`;ch.appendChild(c);
+  }
+  // progress
+  const total=p.ex.length*rounds;
+  const done=S.round*p.ex.length+S.exIdx;
+  $('progFill').style.width=(done/total*100)+'%';
+  $('progL').textContent=done+'/'+total;
+  const nex=p.ex[S.exIdx+1];
+  $('progR').textContent=nex?'下一：'+nex.name:(S.round+1<rounds?'下一轮':'最后一个');
+  // next hint
+  if(nex)$('nextHint').innerHTML=`下一个：<span>${nex.name}</span>`;
+  else if(S.round+1<rounds)$('nextHint').innerHTML=`下一轮：<span>${p.ex[0].name}</span>`;
+  else $('nextHint').innerHTML=`<span style="color:var(--accent)">最后一个！</span>`;
+  // timer or reps
+  if(ex.dur){
+    $('timerBlk').style.display='flex';
+    startExTimer(ex.dur);
+    $('mainBtn').textContent='提前完成';
+    $('mainBtn').className='main-btn dim';
+  } else {
+    $('timerBlk').style.display='none';
+    stopExTimer();
+    $('mainBtn').textContent='完成 '+ex.reps;
+    $('mainBtn').className='main-btn';
+  }
+  $('mainBtn').onclick=completeEx;
+  $('skipBtn').onclick=completeEx;
+}
+
+function startExTimer(secs){
+  stopExTimer();
+  const ring=$('ringFg');
+  const circ=2*Math.PI*44;
+  ring.style.strokeDasharray=circ;
+  ring.style.stroke='#c8ff00';
+  let s=secs;
+  $('timerNum').textContent=s;
+  ring.style.strokeDashoffset=0;
+  exTimer=setInterval(()=>{
+    s--;
+    $('timerNum').textContent=s;
+    ring.style.strokeDashoffset=circ*(1-s/secs);
+    if(s<=3)ring.style.stroke='#ff6b6b';
+    if(s<=0){stopExTimer();completeEx();}
+  },1000);
+}
+function stopExTimer(){if(exTimer){clearInterval(exTimer);exTimer=null;}}
+
+function completeEx(){
+  stopExTimer();
+  S.completedSets++;
+  S.setDone[S.exIdx]++;
+  const p=PLAN[S.key];const ex=p.ex[S.exIdx];const rounds=p.ex[0].sets;
+  const nextExIdx=S.exIdx+1;
+  const rest=ex.rest||60;
+  if(nextExIdx<p.ex.length){
+    S.exIdx=nextExIdx;
+    showRest(rest,p.ex[nextExIdx].name,renderEx);
+  } else {
+    const nr=S.round+1;
+    if(nr<rounds){S.round=nr;S.exIdx=0;showRest(rest,`第${nr+1}轮：${p.ex[0].name}`,renderEx);}
+    else showDone();
+  }
+}
+
+function showRest(secs,nextName,cb){
+  const ov=$('restOv');ov.classList.remove('hidden');
+  $('restNextLbl').innerHTML=`下一个：<strong>${nextName}</strong>`;
+  let s=secs;$('restNum').textContent=s;$('restNum').style.color='var(--accent)';
+  if(restTimer)clearInterval(restTimer);
+  restTimer=setInterval(()=>{
+    s--;$('restNum').textContent=s;
+    if(s<=3)$('restNum').style.color='var(--red)';
+    if(s<=0){clearInterval(restTimer);ov.classList.add('hidden');cb();}
+  },1000);
+  $('restSkip').onclick=()=>{clearInterval(restTimer);ov.classList.add('hidden');cb();};
+}
+
+function showDone(){
+  stopExTimer();
+  const mins=Math.round((Date.now()-S.startTime)/60000);
+  $('doneTime').textContent=mins;$('doneSets').textContent=S.completedSets;
+  showScreen('done');
+}
+
+$('backBtn').onclick=()=>{stopExTimer();if(restTimer)clearInterval(restTimer);$('restOv').classList.add('hidden');showScreen('home');};
+$('doneHome').onclick=()=>showScreen('home');
+initHome();
+</script>
+</body>
+</html>

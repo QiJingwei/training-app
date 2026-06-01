@@ -297,11 +297,12 @@ const PLAN={
     {name:'单腿臀桥',sets:3,reps:'10次/腿',dur:null,rest:60,tip:'空中腿伸直，骨盆保持水平不歪'},
   ]}
 };
+const RUN_CONFIG={dur:50}; // 跑步时长配置（分钟）
 const WEEK=[
   {lbl:'一',type:'rest',icon:'😴'},
-  {lbl:'二',type:'run',icon:'🏃'},
+  {lbl:'二',type:'run',icon:'🏃',runDur:RUN_CONFIG.dur},
   {lbl:'三',type:'strength',icon:'💪',key:'sa'},
-  {lbl:'四',type:'run',icon:'🏃'},
+  {lbl:'四',type:'run',icon:'🏃',runDur:RUN_CONFIG.dur},
   {lbl:'五',type:'strength',icon:'💪',key:'sb'},
   {lbl:'六',type:'run',icon:'🏃'},
   {lbl:'日',type:'rest',icon:'😴'},
@@ -361,7 +362,7 @@ function initHome(){
 function renderCard(d){
   const tc=$('tcard');
   if(d.type==='rest'){tc.innerHTML='<div style="padding:32px;text-align:center;color:var(--muted);font-size:14px">今天休息，好好恢复 💤</div>';return;}
-  if(d.type==='run'){tc.innerHTML='<div style="padding:28px 20px;text-align:center;color:var(--muted);font-size:14px;line-height:2">🏃 跑步日<br><span style="font-size:12px">使用 Apple Watch 记录<br>Z2 心率 138–149 bpm</span></div>';return;}
+  if(d.type==='run'){const runDur=d.runDur||45;tc.innerHTML='<div style="padding:28px 20px;text-align:center;color:var(--muted);font-size:14px;line-height:2">🏃 跑步日<br><span style="font-size:12px">Z2 心率 138–149 bpm<br>时长：'+runDur+' 分钟</span></div>';return;}
   const p=PLAN[d.key];
   const items=p.ex.map((e,i)=>`<div class="prev-item"><span class="prev-num">${i+1}</span><span class="prev-name">${e.name}</span><span class="prev-sets">${e.sets}×${e.dur?e.dur+'s':e.reps}</span></div>`).join('');
   tc.innerHTML=`<div class="tcard-bar"><div class="tcard-dot" style="background:${p.color}"></div><div class="tcard-name">${p.name}</div><div class="tcard-meta">${p.meta}</div></div><div class="tcard-list">${items}</div><button class="start-btn" onclick="startWorkout('${d.key}')">开始训练 →</button>`;

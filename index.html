@@ -26,7 +26,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 .home-title span{color:var(--accent)}
 .week-strip{padding:8px 16px 12px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
 .week-strip::-webkit-scrollbar{display:none}
-.wday{flex-shrink:0;width:44px;height:58px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer}
+.wday{flex-shrink:0;width:44px;height:58px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor-pointer}
 .wday.today{border-color:var(--accent);background:rgba(200,255,0,.1)}
 .wday.selected{border-color:rgba(200,255,0,.4);background:rgba(200,255,0,.05)}
 .wday.rest-day{opacity:.4}
@@ -99,6 +99,8 @@ canvas{width:100%;height:100%}
 .chip{padding:5px 12px;border-radius:20px;font-size:12px;font-family:'DM Mono',monospace;border:1px solid var(--border);background:var(--surface2);color:var(--muted)}
 .chip.active{border-color:var(--accent);background:rgba(200,255,0,.12);color:var(--accent)}
 .chip.done{color:var(--border)}
+.chip.left-side{border-left:3px solid var(--blue)}
+.chip.right-side{border-left:3px solid var(--red)}
 .ex-tip{font-size:13px;color:var(--muted);line-height:1.6;padding:11px;background:var(--surface2);border-radius:var(--radius-sm);border-left:3px solid var(--border)}
 .timer-blk{display:flex;flex-direction:column;align-items:center;gap:6px;padding:4px 0}
 .ring-wrap{position:relative;width:96px;height:96px}
@@ -121,7 +123,11 @@ canvas{width:100%;height:100%}
 .rest-num{font-size:72px;font-weight:700;font-family:'DM Mono',monospace;color:var(--accent);line-height:1}
 .rest-next-lbl{font-size:14px;color:var(--muted);text-align:center}
 .rest-next-lbl strong{color:var(--text)}
+.rest-next-lbl .side-indicator{font-size:12px;display:block;margin-top:4px;color:var(--blue)}
+.rest-next-lbl .side-indicator.right{color:var(--red)}
 .rest-skip{margin-top:8px;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 32px;font-size:14px;font-family:'Noto Sans SC',sans-serif;cursor:pointer}
+.rest-resume{display:none;margin-top:8px;background:var(--accent);color:#0e0e0f;border:none;border-radius:var(--radius-sm);padding:12px 32px;font-size:14px;font-weight:700;font-family:'Noto Sans SC',sans-serif;cursor:pointer}
+.rest-resume.show{display:block}
 /* DONE */
 #done{align-items:center;justify-content:center;gap:16px;text-align:center;padding:40px 24px}
 .done-icon{font-size:56px}
@@ -252,9 +258,15 @@ canvas{width:100%;height:100%}
           <div class="timer-num" id="timerNum"></div>
         </div>
         <div class="timer-lbl">保持</div>
+        <div class="next-hint" id="timerHint" style="margin-top:4px"></div>
       </div>
       <div class="ex-tip" id="exTip"></div>
       <div class="next-hint" id="nextHint"></div>
+      <!-- 左右腿切换按钮 -->
+      <div id="sideSelector" style="display:none;gap:12px;justify-content:center;margin-top:12px">
+        <button class="main-btn dim" id="leftSideBtn">⬅️ 左侧</button>
+        <button class="main-btn dim" id="rightSideBtn">右侧 ➡️</button>
+      </div>
     </div>
   </div>
   <div class="action-area">
@@ -266,6 +278,7 @@ canvas{width:100%;height:100%}
     <div class="rest-num" id="restNum">60</div>
     <div class="rest-next-lbl" id="restNextLbl"></div>
     <button class="rest-skip" id="restSkip">跳过休息</button>
+    <button class="rest-resume" id="restResume">继续休息</button>
   </div>
 </div>
 
@@ -281,24 +294,79 @@ canvas{width:100%;height:100%}
 </div>
 
 <script>
+// ===== 唤醒锁（防止熄屏）=====
+let wakeLock = null;
+async function requestWakeLock() {
+  if ('wakeLock' in navigator) {
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+    } catch (err) {
+      console.log('Wake Lock 请求失败:', err);
+    }
+  }
+}
+function releaseWakeLock() {
+  if (wakeLock) {
+    wakeLock.release().then(() => {
+      wakeLock = null;
+    }).catch(() => {});
+  }
+}
+
+// ===== 提示音频（Web Audio API）=====
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playBeep(freq = 880, duration = 0.3, type = 'sine', vol = 0.3) {
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  const now = audioCtx.currentTime;
+  osc.start(now);
+  gain.gain.setValueAtTime(vol, now);
+  gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+  osc.stop(now + duration);
+}
+
+function playCompleteSound() {
+  // 完成提示音：两声清脆的提示音
+  playBeep(880, 0.15, 'sine', 0.3);
+  setTimeout(() => playBeep(1100, 0.2, 'sine', 0.3), 120);
+}
+
+function playLast3SecondsSound() {
+  // 最后3秒提示音：较低沉的脉冲声
+  playBeep(523, 0.25, 'triangle', 0.4);
+}
+
+function playRestEndSound() {
+  // 休息结束提示音
+  playBeep(660, 0.1, 'sine', 0.3);
+  setTimeout(() => playBeep(784, 0.1, 'sine', 0.3), 100);
+  setTimeout(() => playBeep(880, 0.2, 'sine', 0.3), 200);
+}
+
+// ===== 全局训练状态 =====
 const PLAN={
   sa:{name:'力量 A — 臀腿',meta:'约 35 min',color:'#c8ff00',ex:[
     {name:'臀桥',sets:3,reps:'15次',dur:null,rest:60,tip:'脚跟发力，夹臀，腰不过伸。顶峰停 1 秒'},
     {name:'靠墙静蹲',sets:3,reps:null,dur:45,rest:60,tip:'膝不超脚尖，大腿平行地面，背贴墙不滑'},
-    {name:'单腿罗马尼亚硬拉',sets:3,reps:'10次/腿',dur:null,rest:60,tip:'支撑腿微屈，背中立，感受臀大肌拉伸。不稳先退双腿版'},
+    {name:'单腿罗马尼亚硬拉',sets:3,reps:'10次/腿',dur:null,rest:60,tip:'支撑腿微屈，背中立，感受臀大肌拉伸。不稳先退双腿版',singleSide:true},
     {name:'提踵',sets:3,reps:'20次',dur:null,rest:60,tip:'慢起慢落 2s/2s，站台阶边缘效果更好'},
-    {name:'单腿站立',sets:3,reps:null,dur:30,rest:60,tip:'盯固定点保持平衡。进阶：闭眼或站软垫'},
-    {name:'侧卧蚌式开合',sets:3,reps:'15次/侧',dur:null,rest:60,tip:'侧躺膝盖弯曲，脚跟并拢，上方膝盖向上打开，骨盆全程不转动；专项纠正内八、保护右膝'},
+    {name:'单腿站立',sets:3,reps:null,dur:30,rest:60,tip:'盯固定点保持平衡。进阶：闭眼或站软垫',singleSide:true},
+    {name:'侧卧蚌式开合',sets:3,reps:'15次/侧',dur:null,rest:60,tip:'侧躺膝盖弯曲，脚跟并拢，上方膝盖向上打开，骨盆全程不转动；专项纠正内八、保护右膝',singleSide:true},
   ]},
   sb:{name:'力量 B — 核心',meta:'约 25 min',color:'#4fc3f7',ex:[
-    {name:'死虫式',sets:3,reps:'8次/侧',dur:null,rest:60,tip:'下背贴地，对侧手脚同时伸展，呼气启动，不憋气'},
-    {name:'鸟狗式',sets:3,reps:'10次/侧',dur:null,rest:60,tip:'髋不旋转，腰椎不塌陷，想象头顶放一杯水'},
+    {name:'死虫式',sets:3,reps:'8次/侧',dur:null,rest:60,tip:'下背贴地，对侧手脚同时伸展，呼气启动，不憋气',singleSide:true},
+    {name:'鸟狗式',sets:3,reps:'10次/侧',dur:null,rest:60,tip:'髋不旋转，腰椎不塌陷，想象头顶放一杯水',singleSide:true},
     {name:'平板支撑',sets:3,reps:null,dur:40,rest:45,tip:'肘在肩正下方，臀不撅不塌，全程腹部收紧'},
     {name:'侧平板支撑',sets:3,reps:null,dur:25,rest:60,tip:'身体侧面成一直线，髋不下沉'},
-    {name:'单腿臀桥',sets:3,reps:'10次/腿',dur:null,rest:60,tip:'空中腿伸直，骨盆保持水平不歪'},
+    {name:'单腿臀桥',sets:3,reps:'10次/腿',dur:null,rest:60,tip:'空中腿伸直，骨盆保持水平不歪',singleSide:true},
   ]}
 };
-const RUN_CONFIG={dur:50}; // 跑步时长配置（分钟）
+const RUN_CONFIG={dur:50};
 const WEEK=[
   {lbl:'一',type:'rest',icon:'😴'},
   {lbl:'二',type:'run',icon:'🏃',runDur:RUN_CONFIG.dur},
@@ -310,8 +378,17 @@ const WEEK=[
 ];
 
 const $=id=>document.getElementById(id);
+
+// 全局训练状态
 let S={},exTimer=null,restTimer=null;
+let restCallback=null; // 休息结束后要执行的回调
+let currentExDuration=0, currentExElapsed=0;
+let currentRestDuration=0, currentRestElapsed=0;
 let activeTab='home';
+
+// 单侧训练状态
+let currentSide='left'; // 'left' 或 'right'
+let singleSideWorkouts = {}; // 记录每个动作左右侧的完成状态 { actionIndex: {left: doneSets, right: doneSets} }
 
 // ===== TABS =====
 function switchTab(t){
@@ -356,7 +433,6 @@ function initHome(){
     strip.appendChild(div);
   });
   renderCard(tod);
-  // set default date for run form
   $('r-date').value=now.toISOString().slice(0,10);
 }
 
@@ -486,10 +562,8 @@ function drawChart(id,labels,data,color,invertY=false){
     const norm=(v-mn)/range;
     return pad.t+(invertY?norm:1-norm)*ch;
   }
-  // grid line
   ctx.strokeStyle='rgba(255,255,255,0.06)';ctx.lineWidth=1;
   ctx.beginPath();ctx.moveTo(pad.l,pad.t+ch/2);ctx.lineTo(pad.l+cw,pad.t+ch/2);ctx.stroke();
-  // area fill
   ctx.beginPath();
   ctx.moveTo(px(0),py(data[0]));
   data.forEach((v,i)=>{if(i>0)ctx.lineTo(px(i),py(v));});
@@ -499,16 +573,13 @@ function drawChart(id,labels,data,color,invertY=false){
   const grad=ctx.createLinearGradient(0,pad.t,0,pad.t+ch);
   grad.addColorStop(0,color+'55');grad.addColorStop(1,color+'00');
   ctx.fillStyle=grad;ctx.fill();
-  // line
   ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=2;ctx.lineJoin='round';
   data.forEach((v,i)=>{i===0?ctx.moveTo(px(i),py(v)):ctx.lineTo(px(i),py(v));});
   ctx.stroke();
-  // dots
   data.forEach((v,i)=>{
     ctx.beginPath();ctx.arc(px(i),py(v),3,0,Math.PI*2);
     ctx.fillStyle=color;ctx.fill();
   });
-  // labels
   ctx.fillStyle='rgba(136,136,136,0.8)';ctx.font=`10px 'DM Mono',monospace`;ctx.textAlign='center';
   const step=Math.max(1,Math.floor(labels.length/4));
   labels.forEach((l,i)=>{if(i%step===0||i===labels.length-1)ctx.fillText(l,px(i),h-6);});
@@ -517,22 +588,52 @@ function drawChart(id,labels,data,color,invertY=false){
 // ===== WORKOUT ENGINE =====
 function startWorkout(key){
   const p=PLAN[key];
-  S={key,round:0,exIdx:0,setDone:new Array(p.ex.length).fill(0),startTime:Date.now(),completedSets:0};
+  S={key,round:0,exIdx:0,startTime:Date.now(),completedSets:0};
+  singleSideWorkouts = {}; // 重置单侧训练记录
+  currentSide = 'left';
   $('woTitle').textContent=p.name;
   showScreen('workout');
+  requestWakeLock();
   renderEx();
 }
 
 function renderEx(){
   const p=PLAN[S.key],ex=p.ex[S.exIdx],rounds=p.ex[0].sets;
   $('roundBadge').textContent=`第 ${S.round+1} / ${rounds} 轮`;
-  $('exName').textContent=ex.name;$('exTip').textContent=ex.tip;
+  $('exName').textContent=ex.name;
+  $('exTip').textContent=ex.tip;
+
+  // 渲染动作组进度芯片
   const ch=$('chips');ch.innerHTML='';
-  for(let r=0;r<ex.sets;r++){
-    const c=document.createElement('div');
-    c.className='chip'+(r<S.setDone[S.exIdx]?' done':r===S.round?' active':'');
-    c.textContent=`第${r+1}组`;ch.appendChild(c);
+  const isSingleSide = ex.singleSide;
+
+  if (isSingleSide) {
+    // 单侧动作：显示左右侧进度
+    for (let r = 0; r < ex.sets; r++) {
+      // 左侧组
+      const leftDone = (singleSideWorkouts[S.exIdx] && singleSideWorkouts[S.exIdx].left >= r + 1) ? ' done' : (r === S.round && currentSide === 'left' ? ' active' : '');
+      const leftChip = document.createElement('div');
+      leftChip.className = 'chip left-side' + leftDone;
+      leftChip.textContent = `左${r + 1}组`;
+      ch.appendChild(leftChip);
+
+      // 右侧组
+      const rightDone = (singleSideWorkouts[S.exIdx] && singleSideWorkouts[S.exIdx].right >= r + 1) ? ' done' : (r === S.round && currentSide === 'right' ? ' active' : '');
+      const rightChip = document.createElement('div');
+      rightChip.className = 'chip right-side' + rightDone;
+      rightChip.textContent = `右${r + 1}组`;
+      ch.appendChild(rightChip);
+    }
+  } else {
+    // 普通动作
+    for(let r=0;r<ex.sets;r++){
+      const c=document.createElement('div');
+      c.className='chip'+(r<S.setDone[S.exIdx]?' done':r===S.round?' active':'');
+      c.textContent=`第${r+1}组`;
+      ch.appendChild(c);
+    }
   }
+
   const total=p.ex.length*rounds,done=S.round*p.ex.length+S.exIdx;
   $('progFill').style.width=(done/total*100)+'%';
   $('progL').textContent=done+'/'+total;
@@ -541,60 +642,297 @@ function renderEx(){
   if(nex)$('nextHint').innerHTML=`下一个：<span>${nex.name}</span>`;
   else if(S.round+1<rounds)$('nextHint').innerHTML=`下一轮：<span>${p.ex[0].name}</span>`;
   else $('nextHint').innerHTML=`<span style="color:var(--accent)">最后一个！</span>`;
-  if(ex.dur){
-    $('timerBlk').style.display='flex';startExTimer(ex.dur);
-    $('mainBtn').textContent='提前完成';$('mainBtn').className='main-btn dim';
+
+  // 显示左右侧切换按钮（如果是单侧动作）
+  const sideSelector = $('sideSelector');
+  if (isSingleSide) {
+    sideSelector.style.display = 'flex';
+    $('leftSideBtn').textContent = currentSide === 'left' ? `⬅️ 左侧 (当前)` : '⬅️ 左侧';
+    $('rightSideBtn').textContent = currentSide === 'right' ? '右侧 (当前) ➡️' : '右侧 ➡️';
   } else {
-    $('timerBlk').style.display='none';stopExTimer();
-    $('mainBtn').textContent='完成 '+ex.reps;$('mainBtn').className='main-btn';
+    sideSelector.style.display = 'none';
   }
-  $('mainBtn').onclick=completeEx;$('skipBtn').onclick=completeEx;
+
+  // 计时器处理
+  if(ex.dur){
+    $('timerBlk').style.display='flex';
+    startExTimer(ex.dur, isSingleSide);
+    $('mainBtn').textContent='提前完成';
+    $('mainBtn').className='main-btn dim';
+  } else {
+    $('timerBlk').style.display='none';
+    stopExTimer();
+    $('mainBtn').textContent=currentSide === 'left' ? `完成左 ${ex.reps}` : `完成右 ${ex.reps}`;
+    $('mainBtn').className='main-btn';
+  }
+
+  $('mainBtn').onclick=completeEx;
+  $('skipBtn').onclick=completeEx;
+
+  // 绑定左右侧切换按钮
+  if (isSingleSide) {
+    $('leftSideBtn').onclick = () => switchSide('left');
+    $('rightSideBtn').onclick = () => switchSide('right');
+  }
 }
 
-function startExTimer(secs){
+// 切换左右侧
+function switchSide(side) {
+  currentSide = side;
+  renderEx(); // 重新渲染以更新界面
+}
+
+function startExTimer(secs, isSingleSide) {
   stopExTimer();
   const ring=$('ringFg'),circ=2*Math.PI*44;
-  ring.style.strokeDasharray=circ;ring.style.stroke='#c8ff00';
-  let s=secs;$('timerNum').textContent=s;ring.style.strokeDashoffset=0;
+  ring.style.strokeDasharray=circ;
+  ring.style.stroke='#c8ff00';
+  currentExDuration = secs;
+  currentExElapsed = 0;
+  let s=secs;
+  $('timerNum').textContent=s;
+  ring.style.strokeDashoffset=0;
+  $('timerHint').textContent = '';
+
   exTimer=setInterval(()=>{
-    s--;$('timerNum').textContent=s;
+    s--;
+    currentExElapsed++;
+    $('timerNum').textContent=s;
     ring.style.strokeDashoffset=circ*(1-s/secs);
-    if(s<=3)ring.style.stroke='#ff6b6b';
-    if(s<=0){stopExTimer();completeEx();}
+
+    // 最后3秒提示
+    if (s <= 3 && s > 0) {
+      ring.style.stroke='#ff6b6b';
+      if (s === 3) {
+        playLast3SecondsSound();
+        $('timerHint').textContent = '最后 3 秒';
+      } else if (s < 3) {
+        $('timerHint').textContent = `剩余 ${s} 秒`;
+      }
+    }
+
+    // 完成提示音（最后完成时）
+    if (s <= 0) {
+      stopExTimer();
+      if (isSingleSide) {
+        playCompleteSound();
+      }
+      completeEx();
+    }
   },1000);
 }
-function stopExTimer(){if(exTimer){clearInterval(exTimer);exTimer=null;}}
 
-function completeEx(){
-  stopExTimer();S.completedSets++;S.setDone[S.exIdx]++;
-  const p=PLAN[S.key],ex=p.ex[S.exIdx],rounds=p.ex[0].sets,rest=ex.rest||60;
-  const next=S.exIdx+1;
-  if(next<p.ex.length){S.exIdx=next;showRest(rest,p.ex[next].name,renderEx);}
-  else{const nr=S.round+1;if(nr<rounds){S.round=nr;S.exIdx=0;showRest(rest,`第${nr+1}轮：${p.ex[0].name}`,renderEx);}else showDone();}
+function stopExTimer() {
+  if(exTimer) {
+    clearInterval(exTimer);
+    exTimer=null;
+  }
 }
 
-function showRest(secs,nextName,cb){
-  const ov=$('restOv');ov.classList.remove('hidden');
-  $('restNextLbl').innerHTML=`下一个：<strong>${nextName}</strong>`;
-  let s=secs;$('restNum').textContent=s;$('restNum').style.color='var(--accent)';
-  if(restTimer)clearInterval(restTimer);
-  restTimer=setInterval(()=>{
-    s--;$('restNum').textContent=s;
-    if(s<=3)$('restNum').style.color='var(--red)';
-    if(s<=0){clearInterval(restTimer);ov.classList.add('hidden');cb();}
-  },1000);
-  $('restSkip').onclick=()=>{clearInterval(restTimer);ov.classList.add('hidden');cb();};
-}
-
-function showDone(){
+// 完成当前动作
+function completeEx() {
   stopExTimer();
-  const mins=Math.round((Date.now()-S.startTime)/60000);
-  $('doneTime').textContent=mins;$('doneSets').textContent=S.completedSets;
+
+  // 记录单侧完成状态
+  if (S.exIdx in singleSideWorkouts) {
+    if (currentSide === 'left') {
+      singleSideWorkouts[S.exIdx].left++;
+    } else {
+      singleSideWorkouts[S.exIdx].right++;
+    }
+  } else {
+    singleSideWorkouts[S.exIdx] = { left: 0, right: 0 };
+    if (currentSide === 'left') {
+      singleSideWorkouts[S.exIdx].left++;
+    } else {
+      singleSideWorkouts[S.exIdx].right++;
+    }
+  }
+
+  // 检查是否所有轮次都完成
+  const p=PLAN[S.key],ex=p.ex[S.exIdx],rounds=p.ex[0].sets;
+
+  // 确定是否还有后续
+  const next=S.exIdx+1;
+  if (next < p.ex.length) {
+    // 同一个动作，继续下一侧或下一轮
+    if (ex.singleSide) {
+      // 单侧动作：检查是否左右侧都完成
+      const leftDone = singleSideWorkouts[S.exIdx].left >= rounds;
+      const rightDone = singleSideWorkouts[S.exIdx].right >= rounds;
+
+      if (leftDone && rightDone) {
+        // 左右都完成，进入下一动作
+        S.exIdx = next;
+        showRest(ex.rest, p.ex[next].name, renderEx);
+      } else {
+        // 还有未完成的侧，切换到另一侧
+        currentSide = leftDone ? 'right' : 'left';
+        S.setDone = S.setDone || new Array(p.ex.length).fill(0);
+        S.setDone[S.exIdx]++;
+        showRest(ex.rest, (currentSide === 'left' ? '左侧：' : '右侧：') + p.ex[S.exIdx].name, renderEx);
+      }
+    } else {
+      // 普通动作
+      S.exIdx = next;
+      showRest(ex.rest, p.ex[next].name, renderEx);
+    }
+  } else {
+    // 动作序列结束，检查是否还要下一轮
+    const nr = S.round + 1;
+    if (nr < rounds) {
+      S.round = nr;
+      S.exIdx = 0;
+      currentSide = 'left'; // 重置到左侧
+      showRest(ex.rest, `第${nr+1}轮：${p.ex[0].name}`, renderEx);
+    } else {
+      showDone();
+    }
+  }
+}
+
+function showRest(secs, nextName, cb) {
+  const ov = $('restOv');
+  ov.classList.remove('hidden');
+  restCallback = cb;
+
+  // 解析休息信息，包含左右侧信息
+  let sideHint = '';
+  if (nextName.includes('左侧：')) {
+    sideHint = '<span class="side-indicator">➡️ 左侧</span>';
+  } else if (nextName.includes('右侧：')) {
+    sideHint = '<span class="side-indicator right">➡️ 右侧</span>';
+  }
+
+  $('restNextLbl').innerHTML = `下一个：<strong>${nextName.replace('左侧：', '').replace('右侧：', '')}</strong>${sideHint}`;
+
+  let s = secs;
+  $('restNum').textContent = s;
+  $('restNum').style.color = 'var(--accent)';
+  $('restResume').classList.remove('show');
+
+  if (restTimer) clearInterval(restTimer);
+
+  currentRestDuration = secs;
+  currentRestElapsed = 0;
+
+  restTimer = setInterval(() => {
+    s--;
+    currentRestElapsed++;
+    $('restNum').textContent = s;
+
+    if (s <= 3) {
+      $('restNum').style.color = 'var(--red)';
+    }
+
+    if (s <= 0) {
+      clearInterval(restTimer);
+      playRestEndSound();
+      ov.classList.add('hidden');
+      if (cb) cb();
+    }
+  }, 1000);
+
+  // 跳过休息
+  $('restSkip').onclick = () => {
+    clearInterval(restTimer);
+    ov.classList.add('hidden');
+    if (cb) cb();
+  };
+
+  // 取消休息（暂停计时，保持在休息界面）
+  $('restResume').onclick = () => {
+    clearInterval(restTimer);
+    $('restResume').classList.remove('show');
+    // 继续计时逻辑在页面可见性变化中处理
+  };
+}
+
+function showDone() {
+  stopExTimer();
+  if (restTimer) clearInterval(restTimer);
+  $('restOv').classList.add('hidden');
+  releaseWakeLock();
+
+  const mins = Math.round((Date.now() - S.startTime) / 60000);
+  $('doneTime').textContent = mins;
+  $('doneSets').textContent = S.completedSets;
   showScreen('done');
 }
 
-$('backBtn').onclick=()=>{stopExTimer();if(restTimer)clearInterval(restTimer);$('restOv').classList.add('hidden');showScreen('main');};
-$('doneHome').onclick=()=>showScreen('main');
+// 右上角返回按钮
+$('backBtn').onclick = () => {
+  stopExTimer();
+  if (restTimer) clearInterval(restTimer);
+  $('restOv').classList.add('hidden');
+  releaseWakeLock();
+  showScreen('main');
+};
+$('doneHome').onclick = () => showScreen('main');
+
+// 页面可见性变化 - 支持后台计时
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    // 页面隐藏
+    releaseWakeLock();
+
+    if (exTimer) {
+      clearInterval(exTimer);
+      exTimer = null;
+    }
+    if (restTimer) {
+      clearInterval(restTimer);
+      restTimer = null;
+    }
+
+    // 显示"已暂停"按钮
+    if ($('restOv').classList.contains('hidden') === false) {
+      $('restResume').classList.add('show');
+    }
+  } else {
+    // 页面显示
+    requestWakeLock();
+
+    // 恢复计时
+    if (exTimer === null && currentExDuration > 0) {
+      // 重新开始动作计时
+      const remaining = Math.max(0, currentExDuration - currentExElapsed);
+      if (remaining > 0) {
+        startExTimer(remaining, false);
+      }
+    }
+
+    if (restTimer === null && currentRestDuration > 0) {
+      // 重新开始休息计时
+      const remaining = Math.max(0, currentRestDuration - currentRestElapsed);
+      if (remaining > 0) {
+        let s = remaining;
+        $('restNum').textContent = s;
+        $('restNum').style.color = s <= 3 ? 'var(--red)' : 'var(--accent)';
+
+        restTimer = setInterval(() => {
+          s--;
+          currentRestElapsed++;
+          $('restNum').textContent = s;
+
+          if (s <= 3) {
+            $('restNum').style.color = 'var(--red)';
+          }
+
+          if (s <= 0) {
+            clearInterval(restTimer);
+            playRestEndSound();
+            $('restOv').classList.add('hidden');
+            $('restResume').classList.remove('show');
+            if (restCallback) restCallback();
+          }
+        }, 1000);
+      }
+    }
+  }
+});
+
+// 初始化
 initHome();
 </script>
 </body>

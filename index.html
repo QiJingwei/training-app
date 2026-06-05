@@ -353,16 +353,16 @@ const PLAN={
   sa:{name:'力量 A — 臀腿',meta:'约 35 min',color:'#c8ff00',ex:[
     {name:'臀桥',sets:3,reps:'15次',dur:null,rest:60,tip:'脚跟发力，夹臀，腰不过伸。顶峰停 1 秒'},
     {name:'靠墙静蹲',sets:3,reps:null,dur:45,rest:60,tip:'膝不超脚尖，大腿平行地面，背贴墙不滑'},
-    {name:'单腿罗马尼亚硬拉',sets:3,reps:'10次/腿',dur:null,rest:60,tip:'支撑腿微屈，背中立，感受臀大肌拉伸。不稳先退双腿版',singleSide:true},
-    {name:'提踵',sets:3,reps:'20次',dur:null,rest:60,tip:'慢起慢落 2s/2s，站台阶边缘效果更好'},
+    {name:'单腿罗马尼亚硬拉',sets:3,reps:'10次/腿',dur:null,rest:60,tip:'支撑腿微屈，背中立，感受臀大肌和腘绳肌拉伸。不稳先退双腿版',singleSide:true},
+    {name:'提踵',sets:3,reps:'20次',dur:null,rest:60,tip:'慢起慢落 2s/2s，站台阶边缘效果更好，全程保持小腿张力'},
     {name:'单腿站立',sets:3,reps:null,dur:30,rest:60,tip:'盯固定点保持平衡。进阶：闭眼或站软垫',singleSide:true},
     {name:'侧卧蚌式开合',sets:3,reps:'15次/侧',dur:null,rest:60,tip:'侧躺膝盖弯曲，脚跟并拢，上方膝盖向上打开，骨盆全程不转动；专项纠正内八、保护右膝',singleSide:true},
   ]},
   sb:{name:'力量 B — 核心',meta:'约 25 min',color:'#4fc3f7',ex:[
-    {name:'死虫式',sets:3,reps:'8次/侧',dur:null,rest:60,tip:'下背贴地，对侧手脚同时伸展，呼气启动，不憋气',singleSide:true},
-    {name:'鸟狗式',sets:3,reps:'10次/侧',dur:null,rest:60,tip:'髋不旋转，腰椎不塌陷，想象头顶放一杯水',singleSide:true},
+    {name:'死虫式',sets:3,reps:'8次/侧',dur:null,rest:60,tip:'下背贴地，对侧手脚同时伸展，呼气启动，不憋气'},
+    {name:'鸟狗式',sets:3,reps:'10次/侧',dur:null,rest:60,tip:'髋不旋转，腰椎不塌陷，想象头顶放一杯水'},
     {name:'平板支撑',sets:3,reps:null,dur:40,rest:45,tip:'肘在肩正下方，臀不撅不塌，全程腹部收紧'},
-    {name:'侧平板支撑',sets:3,reps:null,dur:25,rest:60,tip:'身体侧面成一直线，髋不下沉'},
+    {name:'侧平板支撑',sets:3,reps:null,dur:25,rest:60,tip:'身体侧面成一直线，髋不下沉',singleSide:true},
     {name:'单腿臀桥',sets:3,reps:'10次/腿',dur:null,rest:60,tip:'空中腿伸直，骨盆保持水平不歪',singleSide:true},
   ]}
 };
@@ -373,7 +373,7 @@ const WEEK=[
   {lbl:'三',type:'strength',icon:'💪',key:'sa'},
   {lbl:'四',type:'run',icon:'🏃',runDur:RUN_CONFIG.dur},
   {lbl:'五',type:'strength',icon:'💪',key:'sb'},
-  {lbl:'六',type:'run',icon:'🏃'},
+  {lbl:'六',type:'run',icon:'🏃',runDur:65},
   {lbl:'日',type:'rest',icon:'😴'},
 ];
 
@@ -381,14 +381,11 @@ const $=id=>document.getElementById(id);
 
 // 全局训练状态
 let S={},exTimer=null,restTimer=null;
-let restCallback=null; // 休息结束后要执行的回调
+let restCallback=null;
 let currentExDuration=0, currentExElapsed=0;
 let currentRestDuration=0, currentRestElapsed=0;
 let activeTab='home';
-
-// 单侧训练状态
-let currentSide='left'; // 'left' 或 'right'
-let singleSideWorkouts = {}; // 记录每个动作左右侧的完成状态 { actionIndex: {left: doneSets, right: doneSets} }
+let currentSide='left';
 
 // ===== TABS =====
 function switchTab(t){
@@ -586,14 +583,10 @@ function drawChart(id,labels,data,color,invertY=false){
 }
 
 // ===== WORKOUT ENGINE =====
-// S 结构：round(当前轮次), exIdx(当前动作索引), setIdx(当前组索引)
-// currentSide: 当前左右侧 ('left' 或 'right')
-let currentSide = 'left';
 function startWorkout(key){
   const p=PLAN[key];
-  S={key,round:0,exIdx:0,setIdx:0,startTime:Date.now(),completedSets:0};
-  singleSideWorkouts = {}; // 重置单侧训练记录 { actionIdx: {left: [完成的组号], right: [完成的组号]} }
-  currentSide = 'left';
+  S={key,round:0,exIdx:0,startTime:Date.now(),completedSets:0};
+  currentSide='left';
   $('woTitle').textContent=p.name;
   showScreen('workout');
   requestWakeLock();
@@ -610,48 +603,43 @@ function renderEx(){
   const ch=$('chips');ch.innerHTML='';
   const isSingleSide = ex.singleSide;
 
-  // 获取已完成的组索引数组（只对单侧动作有效）
-  const leftDone = isSingleSide ? (singleSideWorkouts[S.exIdx] && singleSideWorkouts[S.exIdx].left) || [] : [];
-  const rightDone = isSingleSide ? (singleSideWorkouts[S.exIdx] && singleSideWorkouts[S.exIdx].right) || [] : [];
+  // 获取已完成状态（只对单侧动作有效）
+  // derive from currentSide: if we're on the right, the left side is already done
+  const leftDone  = isSingleSide ? currentSide === 'right' : false;
+  const rightDone = false; // right is never "done" while still in renderEx
 
   if (isSingleSide) {
-    // 单侧动作：显示左右侧组别
-    for(let r=0; r<ex.sets; r++){
-      // 左侧组
-      const leftChip = document.createElement('div');
-      let leftClass = 'chip left-side';
-      if (leftDone.includes(r)) leftClass += ' done';
-      else if (r === S.setIdx && currentSide === 'left') leftClass += ' active';
-      leftChip.className = leftClass;
-      leftChip.textContent = `左${r+1}组`;
-      ch.appendChild(leftChip);
+    // 单侧动作：每轮渲染一对左/右 chip
+    for (let i = 0; i < rounds; i++) {
+      const past = i < S.round;
+      const cur  = i === S.round;
+      const label = rounds > 1 ? (i + 1) : '';
 
-      // 右侧组
-      const rightChip = document.createElement('div');
-      let rightClass = 'chip right-side';
-      if (rightDone.includes(r)) rightClass += ' done';
-      else if (r === S.setIdx && currentSide === 'right') rightClass += ' active';
-      rightChip.className = rightClass;
-      rightChip.textContent = `右${r+1}组`;
-      ch.appendChild(rightChip);
+      const lc = document.createElement('div');
+      let lcls = 'chip left-side';
+      if (past || (cur && leftDone)) lcls += ' done';
+      else if (cur && currentSide === 'left') lcls += ' active';
+      lc.className = lcls;
+      lc.textContent = label ? `左${label}` : '左侧';
+      ch.appendChild(lc);
+
+      const rc = document.createElement('div');
+      let rcls = 'chip right-side';
+      if (past) rcls += ' done';
+      else if (cur && currentSide === 'right') rcls += ' active';
+      rc.className = rcls;
+      rc.textContent = label ? `右${label}` : '右侧';
+      ch.appendChild(rc);
     }
   } else {
-    // 非单侧动作：只显示普通组别
-    for(let r=0; r<ex.sets; r++){
-      const c=document.createElement('div');
-      let cClass='chip';
-      // 检查是否完成
-      let isDone = false;
-      for(let i=0; i<leftDone.length; i++) {
-        if (leftDone[i] === r) isDone = true;
-      }
-      for(let i=0; i<rightDone.length; i++) {
-        if (rightDone[i] === r) isDone = true;
-      }
-      if (isDone) cClass += ' done';
-      else if (r === S.setIdx) cClass += ' active';
+    // 非单侧动作：每轮一个 chip，S.round 之前的标 done，当前的标 active
+    for (let i = 0; i < rounds; i++) {
+      const c = document.createElement('div');
+      let cClass = 'chip';
+      if (i < S.round) cClass += ' done';
+      else if (i === S.round) cClass += ' active';
       c.className = cClass;
-      c.textContent = `第${r+1}组`;
+      c.textContent = `第${i + 1}组`;
       ch.appendChild(c);
     }
   }
@@ -690,8 +678,9 @@ function renderEx(){
     const ex = p.ex[i];
     if (ex.singleSide) {
       // 检查该动作是否左右侧都完成了
-      const allExLeftDone = singleSideWorkouts[i] && singleSideWorkouts[i].left && singleSideWorkouts[i].left.length >= rounds;
-      const allExRightDone = singleSideWorkouts[i] && singleSideWorkouts[i].right && singleSideWorkouts[i].right.length >= rounds;
+      // i < S.exIdx means this exercise was fully completed — both sides are done
+      const allExLeftDone  = true;
+      const allExRightDone = true;
       if (allExLeftDone && allExRightDone) doneGroups += 2;
       else if (allExLeftDone || allExRightDone) doneGroups += 1;
     } else {
@@ -699,23 +688,8 @@ function renderEx(){
     }
   }
 
-  // 当前动作已完成的组
-  const currLeftDone = leftDone.length;
-  const currRightDone = rightDone.length;
-  if (isSingleSide) {
-    // 单侧动作：当前组之前已完成的左右侧
-    if (currentSide === 'left') {
-      doneGroups += currLeftDone;
-    } else {
-      doneGroups += currLeftDone + currRightDone;
-    }
-    // 当前组是否完成
-    if (currentSide === 'left' && leftDone.includes(S.setIdx)) doneGroups++;
-    if (currentSide === 'right' && rightDone.includes(S.setIdx)) doneGroups++;
-  } else {
-    // 非单侧动作：只需看当前组之前完成了多少
-    doneGroups += S.setIdx;
-  }
+  // 当前动作已完成的组：leftDone = (currentSide==='right')，右侧尚未完成
+  if (isSingleSide && leftDone) doneGroups += 1;
 
   $('progFill').style.width=(doneGroups/totalGroups*100)+'%';
   $('progL').textContent=doneGroups+'/'+totalGroups;
@@ -723,32 +697,14 @@ function renderEx(){
   // 计算下一个动作
   let nextExInfo = '';
   if (isSingleSide && currentSide === 'left') {
-    // 左侧仍在进行，下一个应该是右侧同一组
-    if (leftDone.includes(S.setIdx)) {
-      // 左侧本组已完成，切换右侧
-      nextExInfo = `右侧：${ex.name} ${S.setIdx+1}/${rounds}组`;
-    } else {
-      nextExInfo = `${ex.name} (${currentSide === 'left' ? '左侧' : '右侧'})`;
-    }
-  } else if (isSingleSide && currentSide === 'right') {
-    if (rightDone.includes(S.setIdx)) {
-      // 右侧本组已完成，检查是否有下一动作
-      if (S.exIdx + 1 < p.ex.length) {
-        nextExInfo = p.ex[S.exIdx+1].name;
-      } else if (S.round + 1 < rounds) {
-        nextExInfo = `第${S.round+2}轮：${p.ex[0].name}`;
-      } else {
-        nextExInfo = '最后一个！';
-      }
-    } else {
-      nextExInfo = `${ex.name} (右侧)`;
-    }
+    // 左侧做完后下一个是右侧
+    nextExInfo = `右侧：${ex.name}`;
   } else {
-    // 非单侧动作
+    // 单侧右侧 或 非单侧：找下一动作/轮次
     if (S.exIdx + 1 < p.ex.length) {
-      nextExInfo = p.ex[S.exIdx+1].name;
+      nextExInfo = p.ex[S.exIdx + 1].name;
     } else if (S.round + 1 < rounds) {
-      nextExInfo = `第${S.round+2}轮：${p.ex[0].name}`;
+      nextExInfo = `第${S.round + 2}轮：${p.ex[0].name}`;
     } else {
       nextExInfo = '最后一个！';
     }
@@ -837,12 +793,9 @@ function startExTimer(secs, isSingleSide) {
       }
     }
 
-    // 完成提示音（最后完成时）
+    // 计时结束，由 completeEx 统一播放完成音
     if (s <= 0) {
       stopExTimer();
-      if (isSingleSide) {
-        playCompleteSound();
-      }
       completeEx();
     }
   },1000);
@@ -855,92 +808,33 @@ function stopExTimer() {
   }
 }
 
-// 完成当前动作（左侧或右侧）
 function completeEx() {
   stopExTimer();
   S.completedSets++;
   playCompleteSound();
 
   const p=PLAN[S.key],ex=p.ex[S.exIdx],rounds=p.ex[0].sets;
-  const isSingleSide = ex.singleSide;
 
-  // 记录完成状态 - 只有单侧动作才记录左右侧
-  if (isSingleSide) {
-    if (!singleSideWorkouts[S.exIdx]) {
-      singleSideWorkouts[S.exIdx] = { left: [], right: [] };
-    }
-    if (currentSide === 'left') {
-      if (!singleSideWorkouts[S.exIdx].left.includes(S.setIdx)) {
-        singleSideWorkouts[S.exIdx].left.push(S.setIdx);
-      }
-    } else {
-      if (!singleSideWorkouts[S.exIdx].right.includes(S.setIdx)) {
-        singleSideWorkouts[S.exIdx].right.push(S.setIdx);
-      }
-    }
-  } else {
-    // 非单侧动作直接完成当前组
-    S.setIdx++;
+  // 单侧动作：左完成 → 切右侧；右完成 → 进入下一动作
+  if (ex.singleSide && currentSide === 'left') {
+    currentSide = 'right';
+    showRest(ex.rest, `右侧：${ex.name}`, renderEx);
+    return;
   }
 
-  // 确定下一步
-  let moveNext = false;
-
-  if (isSingleSide) {
-    // 单侧动作流程：
-    // 1. 左侧第S.setIdx组完成，切换到右侧 same set
-    // 2. 右侧第S.setIdx组完成，本组完成，S.setIdx++
-    // 3. 如果S.setIdx >= rounds，本动作完成，S.exIdx++
-
-    if (currentSide === 'left') {
-      // 左侧完成，切换到右侧同一组
-      currentSide = 'right';
-      showRest(ex.rest, `右侧：${ex.name} ${S.setIdx+1}/${rounds}组`, renderEx);
-      return; // 直接返回，不进入下一动作
-    } else if (currentSide === 'right') {
-      // 右侧完成，本组完成，进入下一组
-      S.setIdx++;
-      if (S.setIdx < rounds) {
-        // 还有下一组，切换回左侧
-        currentSide = 'left';
-        showRest(ex.rest, `左侧：${ex.name} ${S.setIdx+1}/${rounds}组`, renderEx);
-        return;
-      } else {
-        // 本动作所有组完成，进入下一动作
-        moveNext = true;
-      }
-    }
+  // 进入下一动作 / 下一轮 / 完成
+  currentSide = 'left';
+  if (S.exIdx + 1 < p.ex.length) {
+    S.exIdx++;
+    const ne = p.ex[S.exIdx];
+    showRest(ex.rest, ne.singleSide ? `左侧：${ne.name}` : ne.name, renderEx);
+  } else if (S.round + 1 < rounds) {
+    S.round++;
+    S.exIdx = 0;
+    const fe = p.ex[0];
+    showRest(ex.rest, `第${S.round+1}轮：${fe.singleSide ? '左侧：'+fe.name : fe.name}`, renderEx);
   } else {
-    // 非单侧动作，直接完成并进入下一组
-    S.setIdx++;
-    if (S.setIdx >= rounds) {
-      moveNext = true;
-    } else {
-      // 还有下一组
-      showRest(ex.rest, `${ex.name} ${S.setIdx+1}/${rounds}组`, renderEx);
-      return;
-    }
-  }
-
-  if (moveNext) {
-    // 进入下一动作或下一轮
-    S.setIdx = 0; // 重置组索引
-    if (S.exIdx + 1 < p.ex.length) {
-      S.exIdx++;
-      currentSide = 'left';
-      const nextEx = p.ex[S.exIdx];
-      showRest(ex.rest, nextEx.name, renderEx);
-    } else {
-      // 所有动作做完了，检查是否还有下一轮
-      if (S.round + 1 < rounds) {
-        S.round++;
-        S.exIdx = 0;
-        currentSide = 'left';
-        showRest(ex.rest, `第${S.round+1}轮：${p.ex[0].name}`, renderEx);
-      } else {
-        showDone();
-      }
-    }
+    showDone();
   }
 }
 
